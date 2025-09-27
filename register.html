@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Регистрация Queen Discord</title>
+<style>
+body { font-family: 'Poppins', sans-serif; background: #1a1a2e; color: #fff; display:flex; justify-content:center; align-items:center; height:100vh; }
+.container { background: rgba(255,255,255,0.05); padding:40px 50px; border-radius:20px; width:350px; box-shadow:0 10px 30px rgba(255,76,96,0.5);}
+h2 { text-align:center; margin-bottom:30px; color:#ff4c60;}
+input { width:100%; padding:12px; margin-bottom:20px; border:none; border-radius:10px; background:#2a2a4a; color:#fff; }
+input:focus { outline:2px solid #ff4c60; }
+button { width:100%; padding:12px; border:none; border-radius:10px; background:#ff4c60; color:#fff; font-weight:700; cursor:pointer; transition:0.3s;}
+button:hover { background:#ff2e50; transform:scale(1.05);}
+.error { color:#ff4c60; font-size:0.9rem; margin-bottom:15px; text-align:center;}
+.success { color:#0f0; font-size:0.9rem; margin-bottom:15px; text-align:center;}
+#avatar-preview { width:80px; height:80px; border-radius:50%; object-fit:cover; display:block; margin:10px auto; border:2px solid #ff4c60;}
+</style>
+</head>
+<body>
+    
+<div class="container">
+  <h2>Регистрация</h2>
+  <div id="message"></div>
+  <input type="text" id="username" placeholder="Никнейм">
+  <input type="email" id="email" placeholder="Email">
+  <input type="password" id="password" placeholder="Пароль">
+  <input type="password" id="confirm" placeholder="Подтвердите пароль">
+
+  <!-- Красивый выбор аватара -->
+  <div style="text-align:center; margin-bottom:20px;">
+    <img id="avatar-preview" src="default-avatar.png" alt="Превью аватара">
+    <br>
+    <label for="avatar" style="cursor:pointer; display:inline-block; padding:10px 20px; background:#ff4c60; color:#fff; border-radius:10px; font-weight:600; transition:0.3s;">
+      Выбрать аватар
+    </label>
+    <input type="file" id="avatar" accept="image/*" style="display:none;">
+  </div>
+
+  <button id="registerBtn">Зарегистрироваться</button>
+  <p style="text-align:center;margin-top:15px;">
+    Уже есть аккаунт? <a href="login.html" style="color:#ff85a2;">Войти</a>
+  </p>
+</div>
+
+<script>
+const registerBtn = document.getElementById('registerBtn');
+const messageDiv = document.getElementById('message');
+const avatarInput = document.getElementById('avatar');
+const avatarPreview = document.getElementById('avatar-preview');
+
+// Превью аватара сразу при выборе
+avatarInput.addEventListener('change', () => {
+    const file = avatarInput.files[0];
+    if(file){
+        const reader = new FileReader();
+        reader.onload = e => { avatarPreview.src = e.target.result; }
+        reader.readAsDataURL(file);
+    } else {
+        avatarPreview.src = 'default-avatar.png';
+    }
+});
+
+registerBtn.addEventListener('click', ()=>{
+    const username = document.getElementById('username').value.trim();
+    const email = document.getElementById('email').value.trim();
+    const password = document.getElementById('password').value;
+    const confirm = document.getElementById('confirm').value;
+    const avatarFile = avatarInput.files[0];
+
+    messageDiv.innerHTML = '';
+
+    if(!username || !email || !password || !confirm){
+        messageDiv.innerHTML = '<div class="error">Все поля обязательны</div>';
+        return;
+    }
+
+    if(password.length < 6){
+        messageDiv.innerHTML = '<div class="error">Пароль должен быть не меньше 6 символов</div>';
+        return;
+    }
+
+    if(password !== confirm){
+        messageDiv.innerHTML = '<div class="error">Пароли не совпадают</div>';
+        return;
+    }
+
+    let users = JSON.parse(localStorage.getItem('users')) || [];
+    if(users.find(u => u.email === email)){
+        messageDiv.innerHTML = '<div class="error">Пользователь с таким email уже существует</div>';
+        return;
+    }
+
+    // Сохраняем с аватаром, если выбран
+    if(avatarFile){
+        const reader = new FileReader();
+        reader.onload = function(e){
+            const avatarData = e.target.result;
+            users.push({username,email,password,avatar:avatarData});
+            localStorage.setItem('users', JSON.stringify(users));
+            messageDiv.innerHTML = '<div class="success">Регистрация успешна! Перейдите на вход.</div>';
+            clearFields();
+        }
+        reader.readAsDataURL(avatarFile);
+    } else {
+        users.push({username,email,password});
+        localStorage.setItem('users', JSON.stringify(users));
+        messageDiv.innerHTML = '<div class="success">Регистрация успешна! Перейдите на вход.</div>';
+        clearFields();
+    }
+
+    function clearFields(){
+        document.getElementById('username').value='';
+        document.getElementById('email').value='';
+        document.getElementById('password').value='';
+        document.getElementById('confirm').value='';
+        avatarInput.value='';
+        avatarPreview.src = 'default-avatar.png';
+    }
+});
+</script>
+
+</body>
+</html>
